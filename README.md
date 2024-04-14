@@ -1,2 +1,4 @@
 # Amongus-two
-spotify-project
+Spotify-app
+
+Members: Luigi Dinopol Jan Kenneth Calo Levi Arañez
