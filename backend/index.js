@@ -3,13 +3,13 @@ const jwt = require('jsonwebtoken');
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-// const path = require('path');
+const axios = require('axios');
+
 const app = express();
 const port = 3000;
 
 const saltRounds = 10;
 
-// app.use(express.static(__dirname));
 app.use(cors());
 app.use(express.json());
 app.listen(port,()=>{
@@ -30,6 +30,32 @@ connection.connect((err)=>{
         console.log('connected to database');
     }
 });
+
+// const getTokens = async (code) => {
+//     const data = {
+//         grant_type: 'authorization_code',
+//         code: code,
+//         redirect_uri: 'http://localhost:3000',
+//         client_id: '1f016cd082034c2aad72cdacf963ac2c',
+//         client_secret: 'afd666df2bb64006919ef46448e9dda9'
+//     };
+
+//     const response = await axios.post('https://accounts.spotify.com/api/token', data);
+//     return response.data;
+// };
+
+
+// const refreshToken = async (refreshToken) => {
+//     const data = {
+//         grant_type: 'refresh_token',
+//         refresh_token: refreshToken,
+//         client_id: '1f016cd082034c2aad72cdacf963ac2c',
+//         client_secret: 'afd666df2bb64006919ef46448e9dda9'
+//     };
+
+//     const response = await axios.post('https://accounts.spotify.com/api/token', data);
+//     return response.data;
+// };
 
 app.post('/register', async (req, res)=>{
     const { username, password } = req.body;
@@ -81,9 +107,7 @@ app.post('/logout', (req, res) => {
     res.json({ message: 'Logged out Successfully!' });
 });
 
-// app.get('*', (req, res) => {
-//     res.sendFile(path.json(__dirname, 'index.html'))
-// });
+
 
 function verifyToken(req, res, next){
     const token = req.headers['authorization'];
@@ -102,3 +126,19 @@ function verifyToken(req, res, next){
     });
 }
 
+
+app.get('/songName/:songName', async (req, res) => {
+    const q = req.params.songName;
+    const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`, {
+        headers: {
+            'Authorization' : 'Bearer  BQBBSEM_PIqQdOuC1Zfoa6sWuJGa7LZ8qgbjaEagCNfGnE9l8QmHA-hOSrDCwFFMC2aiNq_Fo8ZNnmDzPeKIvbcfoWjmzLSB4OG-c-nIpESbGLutDxzD_K-hg2Oh6LMUHtKJ5seBl23F47I-wnVKd0VXveR_nPa0nS3si2hV0Fj3KwPTQoPk1mtHWTj24YrL_q3x_aAg9xfVMbXlYpTEQKuSlgP--uZGoZNNjT8-FaEMAhpf-PdlwGSwddqaCZpTx2ryrwQouXbBcvDk9Ue5xvlWtkm5n7yjkuW_177I39zTyfcbVrjX5D9bCTlFGG_xc6ZWcFTfoG_JpQYkC1lYeEY'
+        }
+    });
+
+    let trackIDS = [];
+    response.data.tracks.items.forEach(element => {
+        trackIDS.push({ id: element.id, name: element.name });
+    });
+
+    res.json({message: 'Search Results', data: trackIDS});
+});
