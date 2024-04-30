@@ -8,7 +8,15 @@ const axios = require('axios');
 const app = express();
 const port = 3000;
 
+let spotifyTokens = {
+    accessToken: 'BQA8Y6Gi9vczOiFqchIjkoip0cI21HcN3SIuA9lEbrT3gFfUlh8cNh2Ki5w75si50oAVs7zqynUpBr9AADOVC52CFKFZ2hCjvloMetVl5VZV2wDl9ZHQ8LKTyebkJT0orSDZ40eoZWTgKii6I3wrdzlon34N_bNU_hVkKZaRJGd092ryZ_i91pKRC0xmPcJN9JiEHLy8DSkcaonDCbUaCk-3qiH2zCovSFsM9_89P8o5ZfOXZZUfkZ0lDjYCzWzXFHNwPq6aSCHOghDJjv8gYhbjF5edIyf5n9dwGmDJAS8Yvn4Ngx_6TFS4wFbzLJANu1c1hwLf26FEc28ZUmYlQIY',
+    refreshToken: ''
+}
+
 const saltRounds = 10;
+
+const clientId = '1f016cd082034c2aad72cdacf963ac2c';
+const clientSecret = 'afd666df2bb64006919ef46448e9dda9';
 
 app.use(cors());
 app.use(express.json());
@@ -31,31 +39,50 @@ connection.connect((err)=>{
     }
 });
 
-// const getTokens = async (code) => {
-//     const data = {
-//         grant_type: 'authorization_code',
-//         code: code,
-//         redirect_uri: 'http://localhost:3000',
-//         client_id: '1f016cd082034c2aad72cdacf963ac2c',
-//         client_secret: 'afd666df2bb64006919ef46448e9dda9'
-//     };
+const refreshSpotifyToken = async () => {
+    try{
+        const data = {
+            grant_type: 'refresh_token',
+            refresh_token: spotifyTokens.refreshToken,
+            client_id: clientId,
+            client_secret: clientSecret
+        };
 
-//     const response = await axios.post('https://accounts.spotify.com/api/token', data);
-//     return response.data;
-// };
+        const response = await axios.post('https://accounts.spotify.com/api/token', new URLSearchParams(data), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
 
+        spotifyTokens.accessToken = response.data.access_token;
+        if(response.data.refresh_token){
+            spotifyTokens.refreshToken = response.data.refresh_token;
+        }
+    }catch(error){
+        console.error('Error refreshing spotify token:', error);
+        throw new Error('Failed to refresh spotify token');
+    }
+};
 
-// const refreshToken = async (refreshToken) => {
-//     const data = {
-//         grant_type: 'refresh_token',
-//         refresh_token: refreshToken,
-//         client_id: '1f016cd082034c2aad72cdacf963ac2c',
-//         client_secret: 'afd666df2bb64006919ef46448e9dda9'
-//     };
-
-//     const response = await axios.post('https://accounts.spotify.com/api/token', data);
-//     return response.data;
-// };
+//middleware
+async function ensureSpotifyToken(req, res, next) {
+    try{
+        if(!spotifyTokens.accessToken){
+            await refreshSpotifyToken();
+        } else {
+            const decodedToken = jwt.decode(spotifyTokens.accessToken);
+            const currentTime = Math.floor(Date.now() / 1000);
+            if(decodedToken && decodedToken.exp && decodedToken.exp <= currentTime){
+                await refreshSpotifyToken();
+            }
+        }
+        req.spotifyAccessToken = spotifyTokens.accessToken;
+        next();
+    }catch(error){
+        console.error('Error ensuring spotify token', error);
+        res.status(500).json({ error: 'Failed to ensure spotify token' });
+    }
+}
 
 app.post('/register', async (req, res)=>{
     const { username, password } = req.body;
@@ -126,19 +153,28 @@ function verifyToken(req, res, next){
     });
 }
 
-
-app.get('/songName/:songName', async (req, res) => {
+app.get('/songName/:songName', ensureSpotifyToken, async (req, res) => {
     const q = req.params.songName;
-    const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`, {
-        headers: {
-            'Authorization' : 'Bearer  BQBBSEM_PIqQdOuC1Zfoa6sWuJGa7LZ8qgbjaEagCNfGnE9l8QmHA-hOSrDCwFFMC2aiNq_Fo8ZNnmDzPeKIvbcfoWjmzLSB4OG-c-nIpESbGLutDxzD_K-hg2Oh6LMUHtKJ5seBl23F47I-wnVKd0VXveR_nPa0nS3si2hV0Fj3KwPTQoPk1mtHWTj24YrL_q3x_aAg9xfVMbXlYpTEQKuSlgP--uZGoZNNjT8-FaEMAhpf-PdlwGSwddqaCZpTx2ryrwQouXbBcvDk9Ue5xvlWtkm5n7yjkuW_177I39zTyfcbVrjX5D9bCTlFGG_xc6ZWcFTfoG_JpQYkC1lYeEY'
+    try{
+        const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`, {
+            headers: {
+            'Authorization' : `Bearer  ${req.spotifyAccessToken}`
+            }
+        });
+
+        let trackIDS = [];
+        response.data.tracks.items.forEach(element => {
+            trackIDS.push({ id: element.id, name: element.name });
+        });
+
+        res.json({message: 'Search Results', data: trackIDS});
+    }catch(error){
+        if(error.response && error.response.status === 401){
+            await refreshSpotifyToken();
+            return res.redirect('songName/' + q);
         }
-    });
 
-    let trackIDS = [];
-    response.data.tracks.items.forEach(element => {
-        trackIDS.push({ id: element.id, name: element.name });
-    });
-
-    res.json({message: 'Search Results', data: trackIDS});
+        console.error('Error fetching song:', error);
+        res.status(500).json({error: 'failed to fetch song'});
+    }
 });
