@@ -8,10 +8,10 @@ const axios = require('axios');
 const app = express();
 const port = 3000;
 
-let spotifyTokens = {
-    accessToken: 'BQA8Y6Gi9vczOiFqchIjkoip0cI21HcN3SIuA9lEbrT3gFfUlh8cNh2Ki5w75si50oAVs7zqynUpBr9AADOVC52CFKFZ2hCjvloMetVl5VZV2wDl9ZHQ8LKTyebkJT0orSDZ40eoZWTgKii6I3wrdzlon34N_bNU_hVkKZaRJGd092ryZ_i91pKRC0xmPcJN9JiEHLy8DSkcaonDCbUaCk-3qiH2zCovSFsM9_89P8o5ZfOXZZUfkZ0lDjYCzWzXFHNwPq6aSCHOghDJjv8gYhbjF5edIyf5n9dwGmDJAS8Yvn4Ngx_6TFS4wFbzLJANu1c1hwLf26FEc28ZUmYlQIY',
-    refreshToken: ''
-}
+// let spotifyTokens = {
+//     accessToken: 'BQA8Y6Gi9vczOiFqchIjkoip0cI21HcN3SIuA9lEbrT3gFfUlh8cNh2Ki5w75si50oAVs7zqynUpBr9AADOVC52CFKFZ2hCjvloMetVl5VZV2wDl9ZHQ8LKTyebkJT0orSDZ40eoZWTgKii6I3wrdzlon34N_bNU_hVkKZaRJGd092ryZ_i91pKRC0xmPcJN9JiEHLy8DSkcaonDCbUaCk-3qiH2zCovSFsM9_89P8o5ZfOXZZUfkZ0lDjYCzWzXFHNwPq6aSCHOghDJjv8gYhbjF5edIyf5n9dwGmDJAS8Yvn4Ngx_6TFS4wFbzLJANu1c1hwLf26FEc28ZUmYlQIY',
+//     refreshToken: 'refresh'
+// }
 
 const saltRounds = 10;
 
@@ -41,25 +41,30 @@ connection.connect((err)=>{
 
 const refreshSpotifyToken = async () => {
     try{
-        const data = {
-            grant_type: 'refresh_token',
-            refresh_token: spotifyTokens.refreshToken,
-            client_id: clientId,
-            client_secret: clientSecret
-        };
-
-        const response = await axios.post('https://accounts.spotify.com/api/token', new URLSearchParams(data), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+        const response = await axios.post('https://accounts.spotify.com/api/token', {
+                grant_type: 'client_credentials'
+            }, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+    
+                auth: {
+                    username: clientId,
+                    password: clientSecret
+                }
             }
-        });
+            
 
-        spotifyTokens.accessToken = response.data.access_token;
-        if(response.data.refresh_token){
-            spotifyTokens.refreshToken = response.data.refresh_token;
-        }
+        );
+
+        // spotifyTokens.accessToken = response.data.access_token;
+        // if(response.data.refresh_token){
+        //     spotifyTokens.refreshToken = response.data.refresh_token;
+        // }
+
+        return response.data.access_token;
     }catch(error){
-        console.error('Error refreshing spotify token:', error);
+        console.error('Error refreshing spotify token:', error.response);
         throw new Error('Failed to refresh spotify token');
     }
 };
@@ -153,12 +158,12 @@ function verifyToken(req, res, next){
     });
 }
 
-app.get('/songName/:songName', ensureSpotifyToken, async (req, res) => {
+app.get('/songName/:songName', async (req, res) => {
     const q = req.params.songName;
     try{
         const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`, {
             headers: {
-            'Authorization' : `Bearer  ${req.spotifyAccessToken}`
+            'Authorization' : `Bearer  ${await refreshSpotifyToken()}`
             }
         });
 
