@@ -53,41 +53,15 @@ const refreshSpotifyToken = async () => {
                     password: clientSecret
                 }
             }
-            
-
         );
 
-        // spotifyTokens.accessToken = response.data.access_token;
-        // if(response.data.refresh_token){
-        //     spotifyTokens.refreshToken = response.data.refresh_token;
-        // }
-
-        return response.data.access_token;
+            return response.data.access_token;
     }catch(error){
         console.error('Error refreshing spotify token:', error.response);
         throw new Error('Failed to refresh spotify token');
     }
 };
 
-//middleware
-async function ensureSpotifyToken(req, res, next) {
-    try{
-        if(!spotifyTokens.accessToken){
-            await refreshSpotifyToken();
-        } else {
-            const decodedToken = jwt.decode(spotifyTokens.accessToken);
-            const currentTime = Math.floor(Date.now() / 1000);
-            if(decodedToken && decodedToken.exp && decodedToken.exp <= currentTime){
-                await refreshSpotifyToken();
-            }
-        }
-        req.spotifyAccessToken = spotifyTokens.accessToken;
-        next();
-    }catch(error){
-        console.error('Error ensuring spotify token', error);
-        res.status(500).json({ error: 'Failed to ensure spotify token' });
-    }
-}
 
 app.post('/register', async (req, res)=>{
     const { username, password } = req.body;
@@ -158,7 +132,7 @@ function verifyToken(req, res, next){
     });
 }
 
-app.get('/songName/:songName', async (req, res) => {
+app.get('/songName/:songName', async(req, res) => {
     const q = req.params.songName;
     try{
         const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`, {
