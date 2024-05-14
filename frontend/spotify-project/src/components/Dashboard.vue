@@ -55,7 +55,8 @@
         id: null,
         username: '',
         messages: [],
-        newMessage: ''
+        newMessage: '',
+        socket: null
       };
     },
     async mounted() {
@@ -117,12 +118,15 @@
         try{
           console.log('Sending message:', this.newMessage);
           console.log('User ID:', this.id);
-          this.socket.emit('message', {
+
+          const data = {
             id: this.id,
             username: this.username,
             message: this.newMessage
-          });
+          };
 
+
+          this.socket.emit('message', data);
           this.newMessage = '';
         }catch(error){
           console.log('Error sending message:', error);

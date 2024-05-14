@@ -42,10 +42,10 @@ connection.connect((err) => {
 //         const { id, username, message } = data;
 //         const date = new Date().toISOString();
 
-//         const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
+//         // const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
         
         
-//         const insertMessageQuery = `INSERT INTO messages (id, username, message, date) VALUES ('${id}','${username}', '${message}', '${date}')`;
+//         const insertMessageQuery = `INSERT INTO messages (id, username, message, date) VALUES (${id},'${username}', '${message}', '${date}')`;
 //         console.log('Inserting message into database:', insertMessageQuery);
         
 //         connection.query(insertMessageQuery, (err, result) => {
@@ -65,14 +65,11 @@ io.on('connection', (socket) => {
     console.log('A client connected');
   
     socket.on('message', (data) => {
-      console.log('Received message:', data);
-  
       io.emit('message', data);
   
       const { id, username, message } = data;
       const date = new Date().toISOString();
   
-      // Check if the user exists in the users table
       const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
       connection.query(checkUserQuery, [id], (err, results) => {
         if (err) {
@@ -85,8 +82,7 @@ io.on('connection', (socket) => {
           return;
         }
   
-        // Insert the message into the messages table
-        const insertMessageQuery = `INSERT INTO messages (id, username, message, date) VALUES (?, ?, ?, ?)`;
+        const insertMessageQuery = 'INSERT INTO messages (id, username, message, date_sent) VALUES (?, ?, ?, ?)';
         connection.query(insertMessageQuery, [id, username, message, date], (err, results) => {
           if (err) {
             console.error(err);
