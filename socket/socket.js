@@ -5,7 +5,6 @@ const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
-// app.use(cors({ origin: 'http://localhost:5173' }));
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
@@ -31,45 +30,14 @@ connection.connect((err) => {
     console.log('connected to database');
   });
 
-// io.on('connection', (socket) => {
-//     console.log('A client connected');
-
-//     socket.on('message', (data) => {
-//         console.log('Received message:', data);
-
-//         io.emit('message', data);
-
-//         const { id, username, message } = data;
-//         const date = new Date().toISOString();
-
-//         // const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
-        
-        
-//         const insertMessageQuery = `INSERT INTO messages (id, username, message, date) VALUES (${id},'${username}', '${message}', '${date}')`;
-//         console.log('Inserting message into database:', insertMessageQuery);
-        
-//         connection.query(insertMessageQuery, (err, result) => {
-//             if(err){
-//                 console.error('Error inserting message: ', err);
-//                 return;
-//             }
-//             console.log('Message inserted into database:', message);
-//             // io.emit('message', data);
-//         });
-
-//         console.log(data);
-//     });
-// });
-
 io.on('connection', (socket) => {
     console.log('A client connected');
   
     socket.on('message', (data) => {
       console.log(data);
-      // io.emit('message', data);
-  
+
+
       const { user_id, message } = data;
-      // const date = new Date().toISOString();
 
       const insertMessageQuery = 'INSERT INTO messages (user_id, message) VALUES (?, ?)';
         connection.query(insertMessageQuery, [user_id, message], (err, results) => {
@@ -84,22 +52,6 @@ io.on('connection', (socket) => {
         });
 
         io.emit('message', data);
-
-  
-      // const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
-      // connection.query(checkUserQuery, [id], (err, results) => {
-      //   if (err) {
-      //     console.error(err);
-      //     return;
-      //   }
-  
-      //   if (results.length === 0) {
-      //     console.log(`User with id ${id} not found in users table`);
-      //     return;
-      //   }
-  
-        
-      // });
   
       console.log(data);
     });
