@@ -26,6 +26,9 @@
 
   </div>
 
+
+  
+
   <div v-if="loggedIn">
 
     <h2>Chat</h2>
@@ -52,8 +55,7 @@
         searchInput: '',
         tracks: [],
         loggedIn: false,
-        id: null,
-        username: '',
+        user_id: null,
         messages: [],
         newMessage: '',
         socket: null
@@ -77,20 +79,15 @@
 
             this.message = response.data.message;
             this.loggedIn = true;
-            this.id = response.data.user.id;
+            this.user_id = response.data.user.userId;
             this.username = response.data.user.username;
+
+            console.log(response);
 
             this.socket = io('http://localhost:4000');
             this.socket.on('message', (message) => {
               this.messages.push(message);
             });
-
-            // .then(response => {
-            //   this.message = response.data.message;
-            // }).catch(() => {
-            //   alert('You need to log in.');
-            //   this.$router.push('/login');
-            // });
         }catch(error){
           console.log('error fetching dashboard data:', error);
           this.$router.push('/login');
@@ -117,14 +114,15 @@
         if(this.newMessage.trim() === '') return;
         try{
           console.log('Sending message:', this.newMessage);
-          console.log('User ID:', this.id);
+          console.log('User ID:', this.user_id);
 
           const data = {
-            id: this.id,
+            user_id: this.user_id,
             username: this.username,
             message: this.newMessage
           };
 
+          console.log(this.user_id);
 
           this.socket.emit('message', data);
           this.newMessage = '';
@@ -133,18 +131,6 @@
         }
       }
     }
-    // setup(){
-    //     const router = useRouter();
-
-    //     const logout = () => {
-    //         localStorage.removeItem('authToken');
-    //         router.push('/');
-    //     };
-
-    //     return {
-    //         logout
-    //     };
-    // }
     
   };
   </script>

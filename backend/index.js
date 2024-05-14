@@ -8,11 +8,6 @@ const axios = require('axios');
 const app = express();
 const port = 3000;
 
-// let spotifyTokens = {
-//     accessToken: 'BQA8Y6Gi9vczOiFqchIjkoip0cI21HcN3SIuA9lEbrT3gFfUlh8cNh2Ki5w75si50oAVs7zqynUpBr9AADOVC52CFKFZ2hCjvloMetVl5VZV2wDl9ZHQ8LKTyebkJT0orSDZ40eoZWTgKii6I3wrdzlon34N_bNU_hVkKZaRJGd092ryZ_i91pKRC0xmPcJN9JiEHLy8DSkcaonDCbUaCk-3qiH2zCovSFsM9_89P8o5ZfOXZZUfkZ0lDjYCzWzXFHNwPq6aSCHOghDJjv8gYhbjF5edIyf5n9dwGmDJAS8Yvn4Ngx_6TFS4wFbzLJANu1c1hwLf26FEc28ZUmYlQIY',
-//     refreshToken: 'refresh'
-// }
-
 const saltRounds = 10;
 
 const clientId = '1f016cd082034c2aad72cdacf963ac2c';
@@ -101,7 +96,7 @@ app.post('/login', (req, res) => {
         }
 
         const token = jwt.sign({userId: user.id, username: user.username}, 'secretKey');
-        res.json({token});
+        res.json({token, userId: user.id});
     });
 });
 

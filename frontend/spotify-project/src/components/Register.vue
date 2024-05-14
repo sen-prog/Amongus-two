@@ -29,6 +29,7 @@
           alert('Registration successful');
           this.username = '';
           this.password = '';
+          this.$router.push('/');
         })
         .catch(error => {
           alert(error.response.data.error || 'Failed to register');

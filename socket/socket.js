@@ -65,33 +65,41 @@ io.on('connection', (socket) => {
     console.log('A client connected');
   
     socket.on('message', (data) => {
-      io.emit('message', data);
+      console.log(data);
+      // io.emit('message', data);
   
-      const { id, username, message } = data;
-      const date = new Date().toISOString();
-  
-      const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
-      connection.query(checkUserQuery, [id], (err, results) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-  
-        if (results.length === 0) {
-          console.log(`User with id ${id} not found in users table`);
-          return;
-        }
-  
-        const insertMessageQuery = 'INSERT INTO messages (id, username, message, date_sent) VALUES (?, ?, ?, ?)';
-        connection.query(insertMessageQuery, [id, username, message, date], (err, results) => {
+      const { user_id, message } = data;
+      // const date = new Date().toISOString();
+
+      const insertMessageQuery = 'INSERT INTO messages (user_id, message) VALUES (?, ?)';
+        connection.query(insertMessageQuery, [user_id, message], (err, results) => {
           if (err) {
             console.error(err);
             return;
           }
   
           console.log(`Inserted message with id ${results.insertId}`);
+          
+
         });
-      });
+
+        io.emit('message', data);
+
+  
+      // const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
+      // connection.query(checkUserQuery, [id], (err, results) => {
+      //   if (err) {
+      //     console.error(err);
+      //     return;
+      //   }
+  
+      //   if (results.length === 0) {
+      //     console.log(`User with id ${id} not found in users table`);
+      //     return;
+      //   }
+  
+        
+      // });
   
       console.log(data);
     });
