@@ -86,8 +86,12 @@
 
             this.socket = io('http://localhost:4000');
             this.socket.on('message', (message) => {
-              this.messages.push(message);
+              if(!this.messages.some(msg => msg.id === message.id)){
+                this.messages.push(message);
+              }
             });
+
+            this.fetchMessages();
         }catch(error){
           console.log('error fetching dashboard data:', error);
           this.$router.push('/login');
@@ -110,7 +114,16 @@
         });
       },
 
-      sendMessage(){
+      async fetchMessages(){
+        try{
+          const response = await axios.get('/api/displayMessage');
+          this.messages = response.data;
+        }catch(error){
+          console.error('Error fetching message', error);
+        }
+      },
+
+      async sendMessage(){
         if(this.newMessage.trim() === '') return;
         try{
           console.log('Sending message:', this.newMessage);
@@ -126,6 +139,10 @@
 
           this.socket.emit('message', data);
           this.newMessage = '';
+
+          // await axios.post('/api/displayMessage', data)
+          // this.messages.push(data);
+          
         }catch(error){
           console.log('Error sending message:', error);
         }

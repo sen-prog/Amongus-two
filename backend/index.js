@@ -152,3 +152,17 @@ app.get('/songName/:songName', async(req, res) => {
         res.status(500).json({error: 'failed to fetch song'});
     }
 });
+
+app.get('/displayMessage', (req, res) => {
+    const query = 'SELECT u.username, m.message FROM messages m JOIN users u ON m.user_id = u.id';
+    console.log('Executing query', query);
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching messages:', err);
+        } else {
+            console.log('Messages:', results);
+            res.json(results);
+        }
+    });
+});
