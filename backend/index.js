@@ -172,6 +172,26 @@ app.get('/displayMessage', (req, res) => {
     });
 });
 
+app.post('/shareSong', async (req, res) => {
+    const { songId } = req.body;
+
+    try {
+        const iframeCode = `<iframe style="border-radius: 12px" src="https://open.spotify.com/embed/track/${songId}" width="100%" height="80" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+
+        
+        connection.query('INSERT INTO messages (message) VALUES (?)', [iframeCode], (err, results) => {
+            if (err) {
+                console.error('failed to share song', err);
+            }
+  
+        console.log(`Shared song with id ${results.insertId}`);
+        res.json({ message: 'Song shared successfully!' });
+      });
+    } catch (error) {
+        console.log("There's an error while sharing a song.", error);
+    }
+});
+
 // app.post('/storeMessage', async (req, res) => {
 //     const { user_id, message } = req.body;
     

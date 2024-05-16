@@ -22,6 +22,8 @@
               allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
       </iframe>
 
+      <button type="submit" @click="shareSong">Share</button>
+
     </div>
 
   </div>
@@ -56,7 +58,7 @@
         tracks: [],
         loggedIn: false,
         user_id: null,
-        messages: {},
+        messages: [],
         newMessage: '',
         socket: null
       };
@@ -146,6 +148,17 @@
 
         }catch(error){
           console.log('Error sending message:', error);
+        }
+      },
+
+      async shareSong(){
+        try {
+          const response = await axios.post('http://localhost:3000/shareSong', {
+            songId: this.tracks[0].id
+          });
+        } catch (error) {
+          console.error("There's an error while sharing a song.", error);
+          alert("There's an error while sharing a song.");
         }
       }
     }
