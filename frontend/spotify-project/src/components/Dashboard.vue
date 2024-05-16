@@ -35,7 +35,7 @@
 
     <div>
       <div v-for="msg in messages" :key="msg.id">
-          <p><strong>{{ msg.username }}:</strong> {{ msg.message }}</p>
+          <span><strong>{{ `${ msg.username }: ` }}{{ msg.message }}</strong></span>
       </div>
     </div>
 
@@ -56,7 +56,7 @@
         tracks: [],
         loggedIn: false,
         user_id: null,
-        messages: [],
+        messages: {},
         newMessage: '',
         socket: null
       };
@@ -135,14 +135,15 @@
             message: this.newMessage
           };
 
+          console.log(data);
           console.log(this.user_id);
 
           this.socket.emit('message', data);
           this.newMessage = '';
 
-          // await axios.post('/api/displayMessage', data)
+          // await axios.post('http://localhost:3000/storeMessage', data)
           // this.messages.push(data);
-          
+
         }catch(error){
           console.log('Error sending message:', error);
         }

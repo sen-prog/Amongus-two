@@ -1,21 +1,19 @@
-const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const mysql = require('mysql2');
 const cors = require('cors');
 
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
+  const server = http.createServer();
+  const io = socketIo(server, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST'],
         allowedHeaders: ['my-custom-header'],
         credentials: true
       }
-});
+  });
 
-const connection = mysql.createConnection({
+  const connection = mysql.createConnection({
     host: 'localhost',
     user:   'root',
     password: '',
@@ -30,12 +28,11 @@ connection.connect((err) => {
     console.log('connected to database');
   });
 
-io.on('connection', (socket) => {
+  io.on('connection', (socket) => {
     console.log('A client connected');
   
     socket.on('message', (data) => {
       console.log(data);
-
 
       const { user_id, message } = data;
 
@@ -48,15 +45,15 @@ io.on('connection', (socket) => {
   
           console.log(`Inserted message with id ${results.insertId}`);
           
-
+          io.emit('message', { id: results.insertId, ...data});
         });
 
-        io.emit('message', data);
+        // io.emit('message', data);
+        // io.emit('message', { id: results.insertId, ...data});
   
       console.log(data);
     });
   });
 
-server.listen(4000, () => {
-    console.log('Server is running on http://localhost:4000');
-});
+
+module.exports = { server };

@@ -4,6 +4,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const axios = require('axios');
+const bodyParser = require('body-parser');
+const { server } = require('../socket/socket');
 
 const app = express();
 const port = 3000;
@@ -14,9 +16,14 @@ const clientId = '1f016cd082034c2aad72cdacf963ac2c';
 const clientSecret = 'afd666df2bb64006919ef46448e9dda9';
 
 app.use(cors());
+app.use(bodyParser.json());
 app.use(express.json());
+
 app.listen(port,()=>{
-    console.log(`http://localhost:${port}`);
+    console.log(`Express serever is running on http://localhost:${port}`);
+});
+server.listen(4000, () => {
+    console.log('Socket server is running on http://localhost:4000');
 });
 
 const connection = mysql.createConnection({
@@ -154,9 +161,7 @@ app.get('/songName/:songName', async(req, res) => {
 });
 
 app.get('/displayMessage', (req, res) => {
-    const query = 'SELECT u.username, m.message FROM messages m JOIN users u ON m.user_id = u.id';
-    console.log('Executing query', query);
-
+    const query = 'SELECT u.username, m.message FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.created_at';
     connection.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching messages:', err);
@@ -166,3 +171,21 @@ app.get('/displayMessage', (req, res) => {
         }
     });
 });
+
+// app.post('/storeMessage', async (req, res) => {
+//     const { user_id, message } = req.body;
+    
+//     const insertMessageQuery = 'INSERT INTO messages (user_id, message) VALUES (?, ?)';
+//     connection.query(insertMessageQuery, [user_id, message], (err, results) => {
+//         if (err) {
+//             console.error('Error inserting message into database:', err);
+//         }
+
+//         const newMessage = { user_id, message };
+//         // const newMessage = { id: results.insertId, user_id, message };
+//         io.emit('message', newMessage);
+
+//         console.log(`Inserted message with id ${results.insertId}`);
+//         console.log(results);
+//     });
+// });
