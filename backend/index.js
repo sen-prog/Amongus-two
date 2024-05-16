@@ -172,20 +172,24 @@ app.get('/displayMessage', (req, res) => {
     });
 });
 
-app.post('/shareSong', async (req, res) => {
+app.post('/shareSong', verifyToken, async (req, res) => {
     const { songId } = req.body;
+    const user_id = req.user.userId; 
+
+    console.log('the req.user', req.user);
+
 
     try {
         const iframeCode = `<iframe style="border-radius: 12px" src="https://open.spotify.com/embed/track/${songId}" width="100%" height="80" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
 
-        
-        connection.query('INSERT INTO messages (message) VALUES (?)', [iframeCode], (err, results) => {
+        connection.query('INSERT INTO messages (user_id, message) VALUES (?, ?)', [user_id, iframeCode], (err, results) => {
             if (err) {
                 console.error('failed to share song', err);
             }
-  
-        console.log(`Shared song with id ${results.insertId}`);
-        res.json({ message: 'Song shared successfully!' });
+            
+
+            console.log(`Shared song with id ${results}`);
+            res.json({ message: 'Song shared successfully!' });
       });
     } catch (error) {
         console.log("There's an error while sharing a song.", error);

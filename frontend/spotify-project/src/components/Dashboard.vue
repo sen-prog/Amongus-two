@@ -16,13 +16,26 @@
 
     <div id="results">
       
-      <iframe v-for="track in tracks" :key="track.id"
+      <!-- <iframe v-for="track in tracks" :key="track.id"
               :src="'https://open.spotify.com/embed/track/' + track.id + '?utm_source=generator'"
               style="border-radius: 12px" width="100%" height="80" frameborder="0"
               allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
-      </iframe>
+      </iframe> -->
 
-      <button type="submit" @click="shareSong">Share</button>
+      <div v-for="track in tracks" :key="track.id">
+        <iframe
+          :src="'https://open.spotify.com/embed/track/' + track.id + '?utm_source=generator'"
+          style="border-radius: 12px"
+          width="100%"
+          height="80"
+          frameborder="0"
+          allowfullscreen
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        ></iframe>
+        
+        <button type="submit" @click="shareSong(track.id)">Share</button>
+
+      </div>
 
     </div>
 
@@ -151,11 +164,18 @@
         }
       },
 
-      async shareSong(){
+      async shareSong(songId){
         try {
+          const token = localStorage.getItem('authToken');
+          console.log('Token: ', token);
           const response = await axios.post('http://localhost:3000/shareSong', {
-            songId: this.tracks[0].id
+            songId
+          }, {
+            headers: {
+              'Authorization': token
+            }
           });
+          console.log('Song shared successfully');
         } catch (error) {
           console.error("There's an error while sharing a song.", error);
           alert("There's an error while sharing a song.");
