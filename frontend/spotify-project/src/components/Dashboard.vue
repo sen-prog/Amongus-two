@@ -6,7 +6,6 @@
     </div>
 
     <div>
-
     <h2>Search for a song</h2>
 
     <form @submit.prevent="searchSong">
@@ -14,14 +13,9 @@
       <button type="submit">Search</button>
     </form>
 
-    <div id="results">
-      
-      <!-- <iframe v-for="track in tracks" :key="track.id"
-              :src="'https://open.spotify.com/embed/track/' + track.id + '?utm_source=generator'"
-              style="border-radius: 12px" width="100%" height="80" frameborder="0"
-              allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
-      </iframe> -->
+    <button @click="clearSearchResults">Clear Results</button>
 
+    <div id="results">
       <div v-for="track in tracks" :key="track.id">
         <iframe
           :src="'https://open.spotify.com/embed/track/' + track.id + '?utm_source=generator'"
@@ -32,30 +26,25 @@
           allowfullscreen
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         ></iframe>
-        
         <button type="submit" @click="shareSong(track.id)">Share</button>
-
       </div>
-
     </div>
-
   </div>
 
 
   
 
   <div v-if="loggedIn">
-
     <h2>Chat</h2>
-
     <div>
       <div v-for="msg in messages" :key="msg.id">
-          <span><strong>{{ `${ msg.username }: ` }}{{ msg.message }}</strong></span>
+          <span v-if="!isIframe(msg.message)">
+            <strong>{{ `${ msg.username }: ` }}</strong>{{ msg.message }}
+          </span>
+          <span v-else v-html="`${ msg.username }: ` + msg.message"></span>
       </div>
     </div>
-
     <input v-model="newMessage" type="text" placeholder="Type your message..." @keyup.enter="sendMessage">
-
   </div>
   </template>
   
@@ -122,11 +111,20 @@
         axios.get(`http://localhost:3000/songName/${encodeURIComponent(this.searchInput)}`)
         .then(response => {
           this.tracks = response.data.data;
+          this.searchInput = '';
         })
         .catch(error => {
           console.error('Error searching for songs:', error);
           alert('Failed to search for songs.');
         });
+      },
+
+      clearSearchResults(){
+        this.tracks = [];
+      },
+
+      isIframe(message){
+        return message.startsWith('<iframe');
       },
 
       async fetchMessages(){
@@ -155,9 +153,6 @@
 
           this.socket.emit('message', data);
           this.newMessage = '';
-
-          // await axios.post('http://localhost:3000/storeMessage', data)
-          // this.messages.push(data);
 
         }catch(error){
           console.log('Error sending message:', error);

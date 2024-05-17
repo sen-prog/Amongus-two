@@ -56,4 +56,4 @@ connection.connect((err) => {
   });
 
 
-module.exports = { server };
+module.exports = { server, io };

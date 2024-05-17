@@ -5,7 +5,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const axios = require('axios');
 const bodyParser = require('body-parser');
-const { server } = require('../socket/socket');
+const { server, io } = require('../socket/socket');
 
 const app = express();
 const port = 3000;
@@ -188,28 +188,18 @@ app.post('/shareSong', verifyToken, async (req, res) => {
             }
             
 
-            console.log(`Shared song with id ${results}`);
+            console.log(`Shared song with id ${results.insertId}`);
+
+            io.emit('message', {
+                id: results.insertId,
+                user_id: user_id,
+                username: req.user.username,
+                message: iframeCode
+            });
+
             res.json({ message: 'Song shared successfully!' });
       });
     } catch (error) {
         console.log("There's an error while sharing a song.", error);
     }
 });
-
-// app.post('/storeMessage', async (req, res) => {
-//     const { user_id, message } = req.body;
-    
-//     const insertMessageQuery = 'INSERT INTO messages (user_id, message) VALUES (?, ?)';
-//     connection.query(insertMessageQuery, [user_id, message], (err, results) => {
-//         if (err) {
-//             console.error('Error inserting message into database:', err);
-//         }
-
-//         const newMessage = { user_id, message };
-//         // const newMessage = { id: results.insertId, user_id, message };
-//         io.emit('message', newMessage);
-
-//         console.log(`Inserted message with id ${results.insertId}`);
-//         console.log(results);
-//     });
-// });
