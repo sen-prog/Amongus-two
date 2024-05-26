@@ -15,7 +15,15 @@
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@popperjs/core": "^2.11.8",
     "@vitejs/plugin-vue": "^5.0.4",
+    "bootstrap": "^5.3.3",
+    "sass": "^1.77.2",
     "vite": "^5.2.8"
-  }
+  },
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "main": "vite.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
