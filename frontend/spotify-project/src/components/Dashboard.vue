@@ -27,7 +27,7 @@
           <div class="searchCont">
             <form @submit.prevent="searchSong">
               <div class="mb-3 d-flex">
-                <input type="text" v-model="searchInput" placeholder=" What do you want to play?" class="form-control" id="searchBar" aria-describedby="emailHelp">
+                <input type="text" v-model="searchInput" placeholder=" What do you want to play?" class="form-control" id="searchBar" aria-describedby="emailHelp" autocomplete="off">
                 <!-- <button type="submit" class="btn" id="searchButton">
                   <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
@@ -71,7 +71,7 @@
               <h2 class="text-light">Chat</h2>
             </div>
             
-            <div class="messCont">
+            <div class="messCont" ref="chatContainer">
               <div v-for="msg in messages" :key="msg.id">
                 <div class="bg">
                   <div class="chtms" id="textCont">
@@ -89,9 +89,9 @@
             </div>
             
             <div class="bg2">
-              <form id="textfield">
+              <form id="textfield" @submit.prevent="sendMessage">
                 <div class="mb-3" id="messageInput">
-                  <input v-model="newMessage" type="text" placeholder="Type your message..." @keyup.enter="sendMessage" class="form-control" id="chat" aria-describedby="emailHelp">
+                  <input v-model="newMessage" type="text" placeholder="Type your message..." @keyup.enter="sendMessage" class="form-control" id="chat" aria-describedby="emailHelp" autocomplete="off">
                 </div>
               </form>
 
@@ -150,10 +150,13 @@
             this.socket.on('message', (message) => {
               if(!this.messages.some(msg => msg.id === message.id)){
                 this.messages.push(message);
+                this.scrollToBottom();
               }
             });
 
-            this.fetchMessages();
+            this.fetchMessages().then(() => {
+              this.scrollToBottom();
+            });
         }catch(error){
           console.log('error fetching dashboard data:', error);
           this.$router.push('/login');
@@ -233,6 +236,13 @@
           console.error("There's an error while sharing a song.", error);
           alert("There's an error while sharing a song.");
         }
+      },
+
+      scrollToBottom() {
+        this.$nextTick(() => {
+          const container = this.$refs.chatContainer;
+          container.scrollTop = container.scrollHeight;
+        });
       }
     }
     
